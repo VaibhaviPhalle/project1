@@ -1,0 +1,59 @@
+# Default runtime configuration. Override by env (AUTH_RAG_ENV=ci -> config/ci.yaml)
+# or by passing --config to the CLI in later steps.
+
+corpus:
+  version: "v1"
+  # Filled in Step 2. Each entry: { id, source_url, kind: rfc|markdown|html }
+  sources: []
+
+chunking:
+  strategy: "section_aware"   # section_aware | recursive
+  chunk_size_tokens: 512
+  chunk_overlap_tokens: 64
+  min_chunk_tokens: 32
+
+embeddings:
+  model: "BAAI/bge-small-en-v1.5"
+  dimension: 384
+  batch_size: 32
+  normalize: true
+
+vector_store:
+  backend: "chroma"
+  collection_name_template: "auth_corpus_{version}"
+  distance: "cosine"
+
+retrieval:
+  dense_top_k: 20
+  sparse_top_k: 20
+  fused_top_k: 20
+  rerank_top_k: 5
+  fusion: "rrf"          # rrf | weighted
+  rrf_k: 60
+  min_score_threshold: 0.15
+
+reranker:
+  enabled: true
+  model: "BAAI/bge-reranker-base"
+  batch_size: 16
+
+generation:
+  temperature: 0.0
+  max_output_tokens: 1024
+  timeout_s: 30
+  max_retries: 3
+  request_token_budget: 6000   # input cap; truncate context to fit
+
+citation:
+  enforce: true
+  min_citations_per_answer: 1
+  nli_entailment_threshold: 0.5
+  refuse_on_empty_context: true
+
+eval:
+  judge_provider: "google"     # cheaper free tier for RAGAS LLM-judge
+  judge_model: "gemini-1.5-flash"
+  golden_set_path: "eval/golden_set.jsonl"
+  smoke_set_path: "eval/smoke_set.jsonl"
+  baseline_path: "eval/baseline.json"
+  faithfulness_regression_threshold: 0.02
