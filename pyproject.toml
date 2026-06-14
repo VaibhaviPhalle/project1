@@ -22,7 +22,10 @@ dependencies = [
     "python-dotenv>=1.0,<2",
     "pyyaml>=6.0,<7",
     "tenacity>=8.3,<10",
-    "diskcache>=5.6,<6",
+    # NOTE: A persistent cache library (diskcache / sqlitedict / custom) is
+    # selected in Step 5/6 when caching is actually wired up. Deferred to
+    # avoid carrying a dep with an unfixed CVE (CVE-2025-69872 in diskcache)
+    # that we don't yet exercise.
 ]
 
 [project.optional-dependencies]
@@ -70,9 +73,9 @@ ui = [
 dev = [
     "ruff>=0.6,<1",
     "mypy>=1.11,<2",
-    "pytest>=8.3,<9",
-    "pytest-cov>=5.0,<7",
-    "pytest-asyncio>=0.24,<1",
+    "pytest>=9.0.3,<10",  # 9.0.3 fixes CVE-2025-71176
+    "pytest-cov>=5.0,<8",
+    "pytest-asyncio>=1.0,<2",
     "pre-commit>=3.8,<5",
     "deptry>=0.20,<1",
     "pip-audit>=2.7,<3",
@@ -165,26 +168,11 @@ pretty = true
 plugins = ["pydantic.mypy"]
 exclude = ["build/", "dist/", "data/"]
 
-[[tool.mypy.overrides]]
-module = [
-    "chromadb.*",
-    "sentence_transformers.*",
-    "bm25s.*",
-    "rank_bm25.*",
-    "ragas.*",
-    "datasets.*",
-    "langchain_chroma.*",
-    "langchain_groq.*",
-    "langchain_google_genai.*",
-    "langchain_huggingface.*",
-    "ollama.*",
-    "diskcache.*",
-]
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
+# Per-package ``ignore_missing_imports`` overrides for libraries without type
+# stubs are added by the step that first imports them (e.g. chromadb in Step 4,
+# sentence_transformers in Step 4, langchain_* in Step 5, ragas in Step 7).
+# A ``tests.*`` override (relaxing strict typing) is added when mypy starts
+# scanning tests; today it scans ``src/`` only.
 
 # ---------- Pytest ----------
 [tool.pytest.ini_options]
@@ -247,7 +235,6 @@ DEP002 = [
     "pyyaml",
     "python-dotenv",
     "tenacity",
-    "diskcache",
     # Step 4 (embeddings + vector store)
     "chromadb",
     "sentence-transformers",

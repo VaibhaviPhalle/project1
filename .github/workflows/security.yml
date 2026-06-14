@@ -14,15 +14,19 @@ jobs:
   pip-audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install uv
-        uses: astral-sh/setup-uv@v3
+        uses: astral-sh/setup-uv@v5
         with:
-          version: "0.5.x"
           enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
       - name: Set up Python
         run: uv python install 3.11
       - name: Install runtime + dev
         run: uv pip install --system -e ".[dev]"
       - name: pip-audit
-        run: pip-audit --strict --skip-editable
+        # `--strict` is intentionally omitted: it makes the "editable install
+        # skipped" notice fatal even when no vulns are found.
+        run: pip-audit --skip-editable
