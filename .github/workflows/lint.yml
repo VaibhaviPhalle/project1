@@ -26,23 +26,20 @@ jobs:
             uv.lock
             pyproject.toml
 
-      - name: Set up Python
-        run: uv python install 3.11
-
-      - name: Install dev deps
-        run: uv pip install --system -e ".[dev]"
+      - name: Sync (frozen, dev extras only)
+        run: uv sync --frozen --extra dev
 
       - name: Ruff lint
-        run: ruff check .
+        run: uv run ruff check .
 
       - name: Ruff format check
-        run: ruff format --check .
+        run: uv run ruff format --check .
 
       - name: Mypy
-        run: mypy src
+        run: uv run mypy src
 
       - name: deptry
-        run: deptry src
+        run: uv run deptry src
 
   secret-scan:
     runs-on: ubuntu-latest

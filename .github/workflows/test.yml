@@ -30,13 +30,10 @@ jobs:
             uv.lock
             pyproject.toml
 
-      - name: Set up Python
-        run: uv python install ${{ matrix.python-version }}
-
-      - name: Install
-        run: uv pip install --system -e ".[dev]"
+      - name: Sync (frozen, dev extras only)
+        run: uv sync --frozen --extra dev --python ${{ matrix.python-version }}
 
       - name: Run unit tests
         env:
           AUTH_RAG_ENV: ci
-        run: pytest -m unit
+        run: uv run pytest -m unit

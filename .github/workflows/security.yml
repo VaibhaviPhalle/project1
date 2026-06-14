@@ -22,11 +22,9 @@ jobs:
           cache-dependency-glob: |
             uv.lock
             pyproject.toml
-      - name: Set up Python
-        run: uv python install 3.11
-      - name: Install runtime + dev
-        run: uv pip install --system -e ".[dev]"
+      - name: Sync (frozen, dev extras only)
+        run: uv sync --frozen --extra dev
       - name: pip-audit
-        # `--strict` is intentionally omitted: it makes the "editable install
-        # skipped" notice fatal even when no vulns are found.
-        run: pip-audit --skip-editable
+        # ``--strict`` is intentionally omitted: in strict mode the
+        # "editable install skipped" notice is treated as a finding.
+        run: uv run pip-audit --skip-editable
