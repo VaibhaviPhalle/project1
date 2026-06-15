@@ -72,7 +72,7 @@ ui = [
 # Dev tooling.
 dev = [
     "ruff>=0.6,<1",
-    "mypy>=1.11,<2",
+    "mypy>=1.11,<3",
     "pytest>=9.0.3,<10",  # 9.0.3 fixes CVE-2025-71176
     "pytest-cov>=5.0,<8",
     "pytest-asyncio>=1.0,<2",
