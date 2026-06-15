@@ -154,6 +154,7 @@ name = "auth-rag"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "httpx" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
     { name = "python-dotenv" },
@@ -234,6 +235,7 @@ requires-dist = [
     { name = "deptry", marker = "extra == 'dev'", specifier = ">=0.20,<1" },
     { name = "fastapi", marker = "extra == 'api'", specifier = ">=0.111,<1" },
     { name = "gradio", marker = "extra == 'ui'", specifier = ">=4.40,<6" },
+    { name = "httpx", specifier = ">=0.27,<1" },
     { name = "langchain-chroma", marker = "extra == 'orchestration'", specifier = ">=0.1,<0.2" },
     { name = "langchain-core", marker = "extra == 'orchestration'", specifier = ">=0.3,<0.4" },
     { name = "langchain-google-genai", marker = "extra == 'llm'", specifier = ">=2.0,<3" },

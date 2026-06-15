@@ -1,0 +1,96 @@
+# Corpus manifest. Single source of truth for every ingested document.
+#
+# Adding a source:
+#   1. Add an entry below.
+#   2. Run `auth-rag ingest --only <doc_id>` once to populate `expected_sha256`.
+#   3. Re-run with the hash committed; CI will refuse content that drifts.
+#
+# Removing a source: delete the entry and re-run `auth-rag ingest --prune`
+# (lands in Step 4) to clear the index.
+#
+# kind values: rfc_txt | markdown | html
+# license values: see auth_rag.ingestion.models.License (SPDX where possible)
+
+corpus_version: "v1"
+
+sources:
+  # ----- OAuth 2.0 core -----
+  - doc_id: rfc6749
+    title: "The OAuth 2.0 Authorization Framework"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc6749.txt"
+    license: public-domain
+    notes: "The spine of OAuth 2.0."
+
+  - doc_id: rfc6750
+    title: "The OAuth 2.0 Authorization Framework: Bearer Token Usage"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc6750.txt"
+    license: public-domain
+
+  - doc_id: rfc6819
+    title: "OAuth 2.0 Threat Model and Security Considerations"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc6819.txt"
+    license: public-domain
+    notes: "High-value security depth; supports adversarial Q&A in eval."
+
+  # ----- JWT family -----
+  - doc_id: rfc7519
+    title: "JSON Web Token (JWT)"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc7519.txt"
+    license: public-domain
+
+  - doc_id: rfc9068
+    title: "JSON Web Token (JWT) Profile for OAuth 2.0 Access Tokens"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc9068.txt"
+    license: public-domain
+    notes: "Standardizes the famously inconsistent access-token-as-JWT pattern."
+
+  # ----- Modern OAuth flows -----
+  - doc_id: rfc7591
+    title: "OAuth 2.0 Dynamic Client Registration Protocol"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc7591.txt"
+    license: public-domain
+
+  - doc_id: rfc7592
+    title: "OAuth 2.0 Dynamic Client Registration Management Protocol"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc7592.txt"
+    license: public-domain
+
+  - doc_id: rfc7636
+    title: "Proof Key for Code Exchange by OAuth Public Clients (PKCE)"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc7636.txt"
+    license: public-domain
+    notes: "Critical for native and SPA flows."
+
+  - doc_id: rfc8252
+    title: "OAuth 2.0 for Native Apps (BCP 212)"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc8252.txt"
+    license: public-domain
+    notes: "Best-current-practice; pairs naturally with PKCE in eval questions."
+
+  - doc_id: rfc8628
+    title: "OAuth 2.0 Device Authorization Grant"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc8628.txt"
+    license: public-domain
+
+  - doc_id: rfc8693
+    title: "OAuth 2.0 Token Exchange"
+    kind: rfc_txt
+    source_url: "https://www.rfc-editor.org/rfc/rfc8693.txt"
+    license: public-domain
+    notes: "Service-to-service auth pattern."
+
+# Future sources (HTML / PDF loaders land in a follow-up PR):
+#   - openid-connect-core-1_0  (HTML, openid.net)
+#   - saml2-core               (PDF, OASIS)
+#   - keycloak-server-admin    (Apache-2.0 markdown)
+#   - auth0-flows              (HTML, Auth0)

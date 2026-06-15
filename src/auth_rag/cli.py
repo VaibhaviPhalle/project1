@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from auth_rag._version import __version__
 from auth_rag.logging_config import configure_logging, get_logger
@@ -28,6 +29,25 @@ def _build_parser() -> argparse.ArgumentParser:
 
     info = sub.add_parser("info", help="Print resolved settings (secrets redacted).")
     info.set_defaults(func=_cmd_info)
+
+    ingest = sub.add_parser(
+        "ingest",
+        help="Download, parse, scrub, and write the corpus manifest.",
+    )
+    ingest.add_argument(
+        "--config",
+        type=Path,
+        default=Path("config/corpus.yaml"),
+        help="Path to corpus.yaml (default: config/corpus.yaml).",
+    )
+    ingest.add_argument(
+        "--only",
+        action="append",
+        default=None,
+        metavar="DOC_ID",
+        help="Restrict ingestion to one or more doc_ids (repeatable).",
+    )
+    ingest.set_defaults(func=_cmd_ingest)
 
     return parser
 
@@ -48,6 +68,29 @@ def _cmd_info(_: argparse.Namespace) -> int:
         index_dir=str(settings.index_dir),
         groq_key_set=settings.groq_api_key is not None,
         google_key_set=settings.google_api_key is not None,
+    )
+    return 0
+
+
+def _cmd_ingest(args: argparse.Namespace) -> int:
+    from auth_rag.ingestion import ingest, load_corpus_config  # noqa: PLC0415
+    from auth_rag.settings import get_settings  # noqa: PLC0415
+
+    settings = get_settings()
+    log = get_logger(__name__)
+    config_path = args.config if args.config.is_absolute() else settings.repo_root() / args.config
+    config = load_corpus_config(config_path)
+    manifest = ingest(
+        config=config,
+        raw_dir=settings.data_dir / "raw",
+        processed_dir=settings.data_dir / "processed",
+        only=args.only,
+    )
+    log.info(
+        "ingest.cli.done",
+        n_entries=len(manifest.entries),
+        manifest_sha256=manifest.manifest_sha256,
+        corpus_version=manifest.corpus_version,
     )
     return 0
 
