@@ -34,9 +34,9 @@ dependencies = [
 # Retrieval stack: embeddings, vector store, sparse retrieval, reranker.
 # (tiktoken graduated to runtime deps in Step 3 -- chunking needs it.)
 retrieval = [
-    "chromadb>=0.5,<0.6",
-    "sentence-transformers>=3.0,<4",
-    "bm25s>=0.2,<0.3",
+    "chromadb>=0.5,<1.6",
+    "sentence-transformers>=3.0,<6",
+    "bm25s>=0.2,<0.4",
     "rank-bm25>=0.2,<0.3",
 ]
 
