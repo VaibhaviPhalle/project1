@@ -1,0 +1,30 @@
+name: security
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"  # weekly Monday scan
+
+permissions:
+  contents: read
+
+jobs:
+  pip-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            uv.lock
+            pyproject.toml
+      - name: Sync (frozen, dev extras only)
+        run: uv sync --frozen --extra dev
+      - name: pip-audit
+        # ``--strict`` is intentionally omitted: in strict mode the
+        # "editable install skipped" notice is treated as a finding.
+        run: uv run pip-audit --skip-editable

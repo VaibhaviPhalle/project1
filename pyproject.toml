@@ -1,0 +1,263 @@
+[project]
+name = "auth-rag"
+version = "0.1.0"
+description = "Production-grade RAG over Auth/Identity protocols (OAuth2, OIDC, SAML, JWT) with citation enforcement and CI eval."
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "auth-rag" }]
+keywords = ["rag", "llm", "oauth", "oidc", "retrieval", "langchain", "langgraph"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+# Core runtime: keep tight. Heavy/optional deps live in extras below.
+dependencies = [
+    "pydantic>=2.7,<3",
+    "pydantic-settings>=2.3,<3",
+    "structlog>=24.1,<25",
+    "python-dotenv>=1.0,<2",
+    "pyyaml>=6.0,<7",
+    "tenacity>=8.3,<10",
+    # NOTE: A persistent cache library (diskcache / sqlitedict / custom) is
+    # selected in Step 5/6 when caching is actually wired up. Deferred to
+    # avoid carrying a dep with an unfixed CVE (CVE-2025-69872 in diskcache)
+    # that we don't yet exercise.
+]
+
+[project.optional-dependencies]
+# Retrieval stack: embeddings, vector store, sparse retrieval, reranker.
+retrieval = [
+    "chromadb>=0.5,<0.6",
+    "sentence-transformers>=3.0,<4",
+    "bm25s>=0.2,<0.3",
+    "rank-bm25>=0.2,<0.3",
+    "tiktoken>=0.7,<1",
+]
+
+# LangChain/LangGraph orchestration. Pin minimal sub-packages, NOT the meta-package.
+orchestration = [
+    "langchain-core>=0.3,<0.4",
+    "langgraph>=0.2,<0.3",
+    "langchain-chroma>=0.1,<0.2",
+    "langchain-huggingface>=0.1,<0.2",
+]
+
+# LLM providers (pick one or more).
+llm = [
+    "langchain-groq>=0.2,<0.3",
+    "langchain-google-genai>=2.0,<3",
+    "ollama>=0.3,<1",
+]
+
+# Eval (heavy: only needed for CI eval and local benchmarking).
+eval = [
+    "ragas>=0.2,<0.3",
+    "datasets>=2.20,<4",
+]
+
+# API + UI.
+api = [
+    "fastapi>=0.111,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "slowapi>=0.1.9,<1",
+]
+ui = [
+    "gradio>=4.40,<6",
+]
+
+# Dev tooling.
+dev = [
+    "ruff>=0.6,<1",
+    "mypy>=1.11,<2",
+    "pytest>=9.0.3,<10",  # 9.0.3 fixes CVE-2025-71176
+    "pytest-cov>=5.0,<8",
+    "pytest-asyncio>=1.0,<2",
+    "pre-commit>=3.8,<5",
+    "deptry>=0.20,<1",
+    "pip-audit>=2.7,<3",
+    "types-PyYAML>=6.0,<7",
+]
+
+# Convenience: everything except dev.
+all = [
+    "auth-rag[retrieval,orchestration,llm,eval,api,ui]",
+]
+
+[project.urls]
+Repository = "https://github.com/example/auth-rag"
+Issues = "https://github.com/example/auth-rag/issues"
+
+[project.scripts]
+auth-rag = "auth_rag.cli:main"
+
+# ---------- Build ----------
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/auth_rag"]
+
+# ---------- Ruff (lint + format) ----------
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+extend-exclude = ["data", "chroma_db", ".cache"]
+
+[tool.ruff.lint]
+# Sensible-strict baseline. Add rules as the codebase grows.
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # comprehensions
+    "UP",   # pyupgrade
+    "SIM",  # simplify
+    "TID",  # tidy imports
+    "RUF",  # ruff-specific
+    "S",    # bandit (security)
+    "PL",   # pylint subset
+    "PT",   # pytest
+    "RET",  # return
+    "ARG",  # unused args
+    "PTH",  # use pathlib
+    "ERA",  # eradicate dead code
+    "TCH",  # type-checking imports
+    "ANN",  # type annotations on public APIs
+]
+ignore = [
+    "E501",     # line length handled by formatter
+    "ANN401",   # allow Any in narrow cases (justify in code)
+    "PLR0913",  # arg count -- pipelines naturally have many
+    "S101",     # asserts allowed in tests; per-file override below
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["S101", "ANN", "ARG", "PLR2004"]
+"scripts/**/*.py" = ["ANN", "T201"]
+"src/auth_rag/__init__.py" = ["F401"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["auth_rag"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "lf"
+
+# ---------- Mypy ----------
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_any_generics = true
+no_implicit_optional = true
+check_untyped_defs = true
+show_error_codes = true
+pretty = true
+plugins = ["pydantic.mypy"]
+exclude = ["build/", "dist/", "data/"]
+
+# Per-package ``ignore_missing_imports`` overrides for libraries without type
+# stubs are added by the step that first imports them (e.g. chromadb in Step 4,
+# sentence_transformers in Step 4, langchain_* in Step 5, ragas in Step 7).
+# A ``tests.*`` override (relaxing strict typing) is added when mypy starts
+# scanning tests; today it scans ``src/`` only.
+
+# ---------- Pytest ----------
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov=auth_rag",
+    "--cov-branch",
+    "--cov-report=term-missing",
+    "--cov-fail-under=70",
+]
+markers = [
+    "unit: fast unit tests (no IO)",
+    "integration: integration tests (real models / IO)",
+    "eval: full evaluation (slow, CI on PR-to-main only)",
+]
+asyncio_mode = "auto"
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:pydantic.*",
+    "ignore::DeprecationWarning:google.*",
+]
+
+[tool.coverage.run]
+source = ["src/auth_rag"]
+branch = true
+omit = ["*/cli.py", "*/__main__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+]
+
+# ---------- deptry ----------
+[tool.deptry]
+extend_exclude = ["scripts", "tests"]
+# Many deps are introduced one step ahead of their first import (each phase of
+# the roadmap lands a vertical slice). Whitelist them here; they're scrubbed
+# from this list as each step actually wires them up.
+[tool.deptry.per_rule_ignores]
+DEP001 = []
+DEP002 = [
+    # Dev tooling (CLI; never imported)
+    "ruff",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "pre-commit",
+    "deptry",
+    "pip-audit",
+    "types-PyYAML",
+    # Loaded dynamically (Hydra-like config) -- becomes used in Step 2+
+    "pyyaml",
+    "python-dotenv",
+    "tenacity",
+    # Step 4 (embeddings + vector store)
+    "chromadb",
+    "sentence-transformers",
+    "tiktoken",
+    "langchain-chroma",
+    "langchain-huggingface",
+    # Step 5 (LangGraph)
+    "langchain-core",
+    "langgraph",
+    # Step 6 (sparse retrieval + LLM providers)
+    "bm25s",
+    "rank-bm25",
+    "langchain-groq",
+    "langchain-google-genai",
+    "ollama",
+    # Step 7 (eval)
+    "ragas",
+    "datasets",
+    # Step 8 (API + UI)
+    "fastapi",
+    "uvicorn",
+    "slowapi",
+    "gradio",
+    # Self-reference for the [all] extra
+    "auth-rag",
+]
