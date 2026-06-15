@@ -22,6 +22,7 @@ dependencies = [
     "python-dotenv>=1.0,<2",
     "pyyaml>=6.0,<7",
     "tenacity>=8.3,<10",
+    "httpx>=0.27,<1",
     # NOTE: A persistent cache library (diskcache / sqlitedict / custom) is
     # selected in Step 5/6 when caching is actually wired up. Deferred to
     # avoid carrying a dep with an unfixed CVE (CVE-2025-69872 in diskcache)
@@ -137,12 +138,24 @@ ignore = [
     "ANN401",   # allow Any in narrow cases (justify in code)
     "PLR0913",  # arg count -- pipelines naturally have many
     "S101",     # asserts allowed in tests; per-file override below
+    "TC001",    # stdlib types in TYPE_CHECKING -- low circular-import risk
+    "TC002",    # third-party types in TYPE_CHECKING -- ditto
+    "TC003",    # first-party types in TYPE_CHECKING -- ditto
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101", "ANN", "ARG", "PLR2004"]
+"tests/**/*.py" = ["S101", "S108", "ANN", "ARG", "PLR2004"]
 "scripts/**/*.py" = ["ANN", "T201"]
 "src/auth_rag/__init__.py" = ["F401"]
+
+[tool.ruff.lint.flake8-type-checking]
+# Pydantic v2 evaluates type annotations at runtime to build validators, so
+# moving its field types into a TYPE_CHECKING block breaks model construction.
+# Tell ruff which base classes need their imports kept at runtime.
+runtime-evaluated-base-classes = [
+    "pydantic.BaseModel",
+    "pydantic_settings.BaseSettings",
+]
 
 [tool.ruff.lint.isort]
 known-first-party = ["auth_rag"]

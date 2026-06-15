@@ -31,8 +31,8 @@ Foundation**.
 
 | Step | Phase | Status |
 |---:|---|:---:|
-| 1 | Foundation: tooling, settings, logging, CI lint+test, ADRs | in progress |
-| 2 | Corpus + ingestion (RFCs, Auth0, Keycloak) | planned |
+| 1 | Foundation: tooling, settings, logging, CI lint+test, ADRs | done |
+| 2 | Corpus + ingestion (11 RFCs; Auth0/Keycloak in follow-up) | in progress |
 | 3 | Section-aware chunking | planned |
 | 4 | Embeddings + ChromaDB index | planned |
 | 5 | LangGraph retrieval pipeline + citation rendering | planned |
@@ -71,18 +71,41 @@ Foundation**.
 ## Quick start
 
 ```bash
-# Install with dev tools
-uv pip install -e ".[dev]"
+# Install with dev tools (uses uv.lock for reproducibility)
+uv sync --frozen --extra dev
 
 # Configure
 cp .env.example .env   # edit; provide one of GROQ/GOOGLE keys (free tiers)
 
 # Verify the install
-auth-rag info
-pytest -m unit
+uv run auth-rag info
+uv run pytest -m unit
 ```
 
-The full pipeline (ingest → index → ask) lands in subsequent steps.
+### Ingest the corpus (Step 2)
+
+```bash
+# Pull all 11 RFCs declared in config/corpus.yaml, parse + scrub, write manifest
+uv run auth-rag ingest
+
+# Or just one doc for a fast dev loop
+uv run auth-rag ingest --only rfc6749
+
+# Re-runs are idempotent: matching cached hashes skip the network. Set
+# AUTH_RAG_OFFLINE=1 to refuse any HTTP call (default in CI).
+```
+
+Output:
+
+- `data/raw/<doc_id>.txt` — fetched bytes plus a `.meta.json` sidecar
+  recording URL, fetched-at, sha256.
+- `data/processed/<doc_id>/document.json` — parsed structure + metadata.
+- `data/processed/<doc_id>/sections/NNNN_<id>.txt` — one file per section
+  after PII scrubbing.
+- `data/processed/manifest.json` — the canonical corpus index, integrity-hashed.
+
+Indexing (Step 4) and retrieval (Step 5) consume `manifest.json` exclusively;
+they never look at `data/raw/`.
 
 ## Project layout
 
@@ -112,9 +135,9 @@ auth-rag/
 
 ```bash
 # Lint + format + type-check (matches CI exactly)
-ruff check . && ruff format --check .
-mypy src
-pytest -m unit
+uv run ruff check . && uv run ruff format --check .
+uv run mypy src
+uv run pytest -m unit
 ```
 
 Pre-commit hooks (ruff, mypy, gitleaks, large-file guard) run automatically:

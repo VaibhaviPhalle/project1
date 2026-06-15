@@ -15,3 +15,4 @@ Format follows a lightweight subset of [MADR](https://adr.github.io/madr/).
 - [0004 — Hybrid retrieval with RRF over weighted score fusion](./0004-rrf-fusion.md)
 - [0005 — Section-aware chunking for RFCs over fixed-size chunking](./0005-chunking-strategy.md)
 - [0006 — Four-layer citation enforcement](./0006-citation-enforcement.md)
+- [0007 — Ingestion architecture: declarative corpus + section-aware parsing](./0007-ingestion-architecture.md)
