@@ -47,6 +47,7 @@ coverage.xml
 # Data & artifacts (regeneratable)
 data/raw/
 data/processed/
+data/chunked/
 chroma_db/
 indexes/
 *.bm25
