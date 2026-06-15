@@ -161,6 +161,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "structlog" },
     { name = "tenacity" },
+    { name = "tiktoken" },
 ]
 
 [package.optional-dependencies]
@@ -181,7 +182,6 @@ all = [
     { name = "rank-bm25" },
     { name = "sentence-transformers" },
     { name = "slowapi" },
-    { name = "tiktoken" },
     { name = "uvicorn", extra = ["standard"] },
 ]
 api = [
@@ -220,7 +220,6 @@ retrieval = [
     { name = "chromadb" },
     { name = "rank-bm25" },
     { name = "sentence-transformers" },
-    { name = "tiktoken" },
 ]
 ui = [
     { name = "gradio" },
@@ -260,7 +259,7 @@ requires-dist = [
     { name = "slowapi", marker = "extra == 'api'", specifier = ">=0.1.9,<1" },
     { name = "structlog", specifier = ">=24.1,<25" },
     { name = "tenacity", specifier = ">=8.3,<10" },
-    { name = "tiktoken", marker = "extra == 'retrieval'", specifier = ">=0.7,<1" },
+    { name = "tiktoken", specifier = ">=0.7,<1" },
     { name = "types-pyyaml", marker = "extra == 'dev'", specifier = ">=6.0,<7" },
     { name = "uvicorn", extras = ["standard"], marker = "extra == 'api'", specifier = ">=0.30,<1" },
 ]

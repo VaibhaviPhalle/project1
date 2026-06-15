@@ -32,8 +32,8 @@ Foundation**.
 | Step | Phase | Status |
 |---:|---|:---:|
 | 1 | Foundation: tooling, settings, logging, CI lint+test, ADRs | done |
-| 2 | Corpus + ingestion (11 RFCs; Auth0/Keycloak in follow-up) | in progress |
-| 3 | Section-aware chunking | planned |
+| 2 | Corpus + ingestion (11 RFCs; Auth0/Keycloak in follow-up) | done |
+| 3 | Section-aware chunking with tiktoken + recursive fallback | in progress |
 | 4 | Embeddings + ChromaDB index | planned |
 | 5 | LangGraph retrieval pipeline + citation rendering | planned |
 | 6 | BM25 + RRF fusion + reranker + 4-layer citation enforcement | planned |
@@ -106,6 +106,35 @@ Output:
 
 Indexing (Step 4) and retrieval (Step 5) consume `manifest.json` exclusively;
 they never look at `data/raw/`.
+
+### Chunk the corpus (Step 3)
+
+```bash
+# Default: 512-token chunks with 64-token overlap, section-aware
+uv run auth-rag chunk
+
+# Override the budget for an ablation run
+uv run auth-rag chunk --chunk-size 256 --chunk-overlap 32
+
+# Just one doc
+uv run auth-rag chunk --only rfc6749
+```
+
+Output:
+
+- `data/chunked/<doc_id>/chunks.jsonl` — one chunk per line, each carrying its
+  `(doc_id, section_number, section_title, page_start, page_end)` so the
+  citation `[rfc6749 §4.1.1 p.25]` renders directly from chunk metadata.
+- `data/chunked/chunk_manifest.json` — integrity-hashed over the chunking
+  config + upstream `manifest_sha256` + per-doc chunk counts. Step 4's index
+  rebuilds whenever this hash changes.
+
+Chunks are produced **section-aware**: each chunk lives within exactly one
+section, so retrieval never returns "half of §4.1.1 stitched onto half of §4.1.2".
+Sections larger than the budget fall back to a recursive splitter
+(paragraph → sentence → word → token) with token-level overlap. See
+[ADR 0005](docs/adr/0005-chunking-strategy.md) for the rationale and
+alternatives considered.
 
 ## Project layout
 

@@ -49,6 +49,31 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     ingest.set_defaults(func=_cmd_ingest)
 
+    chunk = sub.add_parser(
+        "chunk",
+        help="Chunk the ingested corpus into retrieval-ready units.",
+    )
+    chunk.add_argument(
+        "--only",
+        action="append",
+        default=None,
+        metavar="DOC_ID",
+        help="Restrict chunking to one or more doc_ids (repeatable).",
+    )
+    chunk.add_argument(
+        "--chunk-size",
+        type=int,
+        default=512,
+        help="Target chunk size in tokens (default: 512).",
+    )
+    chunk.add_argument(
+        "--chunk-overlap",
+        type=int,
+        default=64,
+        help="Overlap between successive chunks in tokens (default: 64).",
+    )
+    chunk.set_defaults(func=_cmd_chunk)
+
     return parser
 
 
@@ -91,6 +116,31 @@ def _cmd_ingest(args: argparse.Namespace) -> int:
         n_entries=len(manifest.entries),
         manifest_sha256=manifest.manifest_sha256,
         corpus_version=manifest.corpus_version,
+    )
+    return 0
+
+
+def _cmd_chunk(args: argparse.Namespace) -> int:
+    from auth_rag.chunking import ChunkingConfig, chunk_corpus  # noqa: PLC0415
+    from auth_rag.settings import get_settings  # noqa: PLC0415
+
+    settings = get_settings()
+    log = get_logger(__name__)
+    config = ChunkingConfig(
+        chunk_size_tokens=args.chunk_size,
+        chunk_overlap_tokens=args.chunk_overlap,
+    )
+    manifest = chunk_corpus(
+        config=config,
+        processed_dir=settings.data_dir / "processed",
+        chunked_dir=settings.data_dir / "chunked",
+        only=args.only,
+    )
+    log.info(
+        "chunk.cli.done",
+        n_docs=len(manifest.entries),
+        n_chunks_total=sum(e.n_chunks for e in manifest.entries),
+        chunk_manifest_sha256=manifest.chunk_manifest_sha256,
     )
     return 0
 

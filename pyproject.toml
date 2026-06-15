@@ -23,6 +23,7 @@ dependencies = [
     "pyyaml>=6.0,<7",
     "tenacity>=8.3,<10",
     "httpx>=0.27,<1",
+    "tiktoken>=0.7,<1",
     # NOTE: A persistent cache library (diskcache / sqlitedict / custom) is
     # selected in Step 5/6 when caching is actually wired up. Deferred to
     # avoid carrying a dep with an unfixed CVE (CVE-2025-69872 in diskcache)
@@ -31,12 +32,12 @@ dependencies = [
 
 [project.optional-dependencies]
 # Retrieval stack: embeddings, vector store, sparse retrieval, reranker.
+# (tiktoken graduated to runtime deps in Step 3 -- chunking needs it.)
 retrieval = [
     "chromadb>=0.5,<0.6",
     "sentence-transformers>=3.0,<4",
     "bm25s>=0.2,<0.3",
     "rank-bm25>=0.2,<0.3",
-    "tiktoken>=0.7,<1",
 ]
 
 # LangChain/LangGraph orchestration. Pin minimal sub-packages, NOT the meta-package.
@@ -251,7 +252,6 @@ DEP002 = [
     # Step 4 (embeddings + vector store)
     "chromadb",
     "sentence-transformers",
-    "tiktoken",
     "langchain-chroma",
     "langchain-huggingface",
     # Step 5 (LangGraph)
